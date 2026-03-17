@@ -4,7 +4,7 @@
 # SQLAlchemy traduit ces classes en SQL automatiquement
 # ============================================================
 
-from sqlalchemy import Column, Integer, String, Float, DateTime
+from sqlalchemy import Column, Integer, String, Float, DateTime, Date, Time, Text
 from sqlalchemy.sql import func
 from database import Base
 
@@ -22,22 +22,41 @@ class WeatherData(Base):
     humidity    = Column(Integer)              # Humidité en %
     wind_speed  = Column(Float)                # Vitesse du vent en m/s
     description = Column(String)              # Description météo (ex: "ciel dégagé")
-    icon        = Column(String)              # Code icône OpenWeatherMap (ex: "01d")
-    created_at  = Column(DateTime, default=func.now())  # Timestamp automatique
+    icon_code   = Column(String)              # Code icône OpenWeatherMap (ex: "01d")
+    measured_at = Column(DateTime, default=func.now())  # Timestamp automatique
 
 # ============================================================
 # Table : air_quality_data
 # Stocke les données qualité de l'air via OpenAQ / OpenWeatherMap
 # ============================================================
 class AirQualityData(Base):
-    __tablename__ = "air_quality_data"
+    __tablename__ = "air_quality"
 
     id         = Column(Integer, primary_key=True, index=True)
     city       = Column(String, index=True)  # Nom de la ville
     aqi        = Column(Integer)             # Air Quality Index (1=Bon → 5=Très mauvais)
     pm25       = Column(Float)               # Particules fines PM2.5 en µg/m³
     no2        = Column(Float)               # Dioxyde d'azote NO2 en µg/m³
-    created_at = Column(DateTime, default=func.now())  # Timestamp automatique
+    o3         = Column(Float)               # Ozone O3 en µg/m³
+    measured_at = Column(DateTime, default=func.now())  # Timestamp automatique
+
+# ============================================================
+# Table : events
+# Stocke les événements publics récupérés via OpenAgenda
+# ============================================================
+class Event(Base):
+    __tablename__ = "events"
+
+    id          = Column(Integer, primary_key=True, index=True)
+    city        = Column(String, index=True)         # Nom de la ville
+    external_id = Column(String, unique=True)        # ID provenant d'OpenAgenda
+    title       = Column(String)                     # Titre de l'événement
+    description = Column(Text)                       # Description longue
+    event_date  = Column(Date)                       # Date de l'événement
+    start_time  = Column(Time)                       # Heure de début
+    location    = Column(String)                     # Lieu
+    category    = Column(String)                     # Catégorie (Culture, Loisirs...)
+    created_at  = Column(DateTime, default=func.now())  # Timestamp automatique
 
 # ============================================================
 # Table : urban_scores

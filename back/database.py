@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 import os
 
 # Charge les variables du fichier .env (clés API, DATABASE_URL)
-load_dotenv()
+load_dotenv("../.env")
 
 # Récupère l'URL de connexion PostgreSQL depuis le .env
 # Format : postgresql://user:password@host:port/database

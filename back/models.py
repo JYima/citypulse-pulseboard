@@ -22,7 +22,7 @@ class WeatherData(Base):
     humidity    = Column(Integer)              # Humidité en %
     wind_speed  = Column(Float)                # Vitesse du vent en m/s
     description = Column(String)              # Description météo (ex: "ciel dégagé")
-    icon_code   = Column(String)              # Code icône OpenWeatherMap (ex: "01d")
+    icon        = Column(String)              # Code icône OpenWeatherMap (ex: "01d")
     measured_at = Column(DateTime, default=func.now())  # Timestamp automatique
 
 # ============================================================

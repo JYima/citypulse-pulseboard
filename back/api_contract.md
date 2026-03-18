@@ -8,7 +8,7 @@
   "humidity": 45,
   "wind_speed": 8.3,
   "description": "Partiellement nuageux",
-  "icon_code": "03d",
+  "icon": "03d",
   "forecast_24h": [
     {"time": "14:00", "temp": 19.0},
     {"time": "17:00", "temp": 17.5},

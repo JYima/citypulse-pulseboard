@@ -17,7 +17,7 @@ CREATE TABLE weather_data (
     humidity INTEGER CHECK (humidity >= 0 AND humidity <= 100),
     wind_speed DECIMAL(5,2),
     description VARCHAR(255),
-    icon_code VARCHAR(10),
+    icon VARCHAR(10),
     measured_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (city, measured_at)
 );

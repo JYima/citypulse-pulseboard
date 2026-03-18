@@ -32,7 +32,7 @@ def simulate_for_city(db, city_name: str, start: datetime, hours: int) -> None:
                 humidity=humidity,
                 wind_speed=wind_speed,
                 description="simulation",
-                icon_code="02d",
+                icon="02d",
                 measured_at=ts,
             )
         )

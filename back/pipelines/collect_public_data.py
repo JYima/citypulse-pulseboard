@@ -88,7 +88,7 @@ def insert_weather(db: Session, city_name: str, payload: dict) -> WeatherData:
         humidity=payload["humidity"],
         wind_speed=payload["wind_speed"],
         description=payload["description"],
-        icon_code=payload["icon_code"],
+        icon=payload["icon"],
         measured_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(row)

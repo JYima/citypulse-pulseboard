@@ -47,7 +47,7 @@ def normalize_weather_payload(city: str, payload: dict[str, Any]) -> dict[str, A
         "humidity": to_int(payload.get("humidity")),
         "wind_speed": to_float(payload.get("wind_speed")),
         "description": str(payload.get("description") or "n/a")[:255],
-        "icon_code": str(payload.get("icon_code") or payload.get("icon") or "")[:10],
+        "icon": str(payload.get("icon") or "")[:10],
     }
 
 

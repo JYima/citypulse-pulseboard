@@ -4,7 +4,7 @@
 
 ### weather_data
 - Role: mesures meteo horaires.
-- Colonnes principales: city, temperature, feels_like, humidity, wind_speed, icon_code, measured_at.
+- Colonnes principales: city, temperature, feels_like, humidity, wind_speed, icon, measured_at.
 - Contraintes: UNIQUE(city, measured_at).
 
 ### air_quality

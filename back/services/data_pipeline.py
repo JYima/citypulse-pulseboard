@@ -81,7 +81,7 @@ def weather_to_response(row: WeatherData) -> dict:
         "humidity": row.humidity,
         "wind_speed": row.wind_speed,
         "description": row.description,
-        "icon_code": row.icon_code,
+        "icon": row.icon,
         "measured_at": row.measured_at.isoformat() if row.measured_at else None,
         "source": "database",
     }

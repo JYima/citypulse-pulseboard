@@ -1,0 +1,27 @@
+Index: back/database.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># ============================================================\r\n# database.py — Connexion à la base de données PostgreSQL\r\n# CityPulse — Tableau de bord urbain intelligent\r\n# ============================================================\r\n\r\nfrom sqlalchemy import create_engine\r\nfrom sqlalchemy.ext.declarative import declarative_base\r\nfrom sqlalchemy.orm import sessionmaker\r\nfrom dotenv import load_dotenv\r\nimport os\r\n\r\n# Charge les variables du fichier .env (clés API, DATABASE_URL)\r\nload_dotenv(\"../.env\")\r\n\r\n# Récupère l'URL de connexion PostgreSQL depuis le .env\r\n# Format : postgresql://user:password@host:port/database\r\nDATABASE_URL = os.getenv(\"DATABASE_URL\")\r\n\r\n# Crée le moteur SQLAlchemy — c'est lui qui gère la connexion\r\n# avec PostgreSQL via psycopg2\r\nengine = create_engine(DATABASE_URL)\r\n\r\n# Crée une \"usine\" à sessions — chaque requête HTTP aura\r\n# sa propre session de BDD indépendante\r\nSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)\r\n\r\n# Classe de base dont hériteront tous nos modèles (tables)\r\n# définis dans models.py\r\nBase = declarative_base()\r\n\r\n# ============================================================\r\n# Dépendance FastAPI — injectée dans chaque endpoint\r\n# Ouvre une session, l'utilise, puis la ferme proprement\r\n# ============================================================\r\ndef get_db():\r\n    db = SessionLocal()\r\n    try:\r\n        yield db        # Fournit la session à l'endpoint\r\n    finally:\r\n        db.close()      # Ferme toujours la session, même en cas d'erreur
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/back/database.py b/back/database.py
+--- a/back/database.py	(revision b125981af861e165ca94e29d79fec1493b3235b3)
++++ b/back/database.py	(date 1773743456089)
+@@ -10,7 +10,7 @@
+ import os
+ 
+ # Charge les variables du fichier .env (clés API, DATABASE_URL)
+-load_dotenv("../.env")
++load_dotenv()
+ 
+ # Récupère l'URL de connexion PostgreSQL depuis le .env
+ # Format : postgresql://user:password@host:port/database
+@@ -37,4 +37,5 @@
+     try:
+         yield db        # Fournit la session à l'endpoint
+     finally:
+-        db.close()      # Ferme toujours la session, même en cas d'erreur
+\ No newline at end of file
++        db.close()      # Ferme toujours la session, même en cas d'erreur
++

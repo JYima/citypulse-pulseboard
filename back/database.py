@@ -11,8 +11,11 @@ import os
 from pathlib import Path
 
 # Charge les variables du fichier .env (clés API, DATABASE_URL)
-BASE_DIR = Path(__file__).resolve().parent
-load_dotenv(BASE_DIR / ".env")
+ROOT_DIR = Path(__file__).resolve().parents[1]
+LOCAL_ENV_PATH = Path(__file__).resolve().parent / ".env"
+ROOT_ENV_PATH = ROOT_DIR / ".env"
+load_dotenv(ROOT_ENV_PATH)
+load_dotenv(LOCAL_ENV_PATH)
 
 # Récupère l'URL de connexion PostgreSQL depuis le .env
 # Format : postgresql://user:password@host:port/database

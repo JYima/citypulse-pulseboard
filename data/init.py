@@ -6,13 +6,20 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).resolve().parents[1]
 SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
 
-# Le .env est stocke dans back/.env
-load_dotenv(ROOT_DIR / "back" / ".env")
+# Charge les variables du fichier .env (clés API, DATABASE_URL)
+LOCAL_ENV_PATH = Path(__file__).resolve().parent / ".env"
+ROOT_ENV_PATH = ROOT_DIR / ".env"
+load_dotenv(ROOT_ENV_PATH)
+load_dotenv(LOCAL_ENV_PATH)
 
 def init_db():
     try:
+        database_url = os.getenv("DATABASE_URL")
+        if not database_url:
+            raise RuntimeError("DATABASE_URL introuvable. Vérifiez le fichier .env à la racine du projet.")
+
         # Connexion à la base de données PostgreSQL avec l'URL de connexion depuis les variables d'environnement
-        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+        conn = psycopg2.connect(database_url)
         cur = conn.cursor()
         
         # Lecture du fichier SQL

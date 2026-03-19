@@ -6,7 +6,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-from services.data_pipeline import refresh_city_data, get_events_for_city, events_to_response
+from services.data_pipeline import get_events_for_city, events_to_response
 
 router = APIRouter()
 
@@ -18,7 +18,6 @@ router = APIRouter()
 @router.get("/events/{city}")
 async def events_list(city: str, db: Session = Depends(get_db)):
     try:
-        await refresh_city_data(db, city)
         rows = get_events_for_city(db, city)
         return events_to_response(rows)
     except Exception as e:

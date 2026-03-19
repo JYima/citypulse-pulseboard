@@ -11,7 +11,6 @@ from services.data_pipeline import (
     get_events_for_city,
     get_latest_air_quality,
     get_latest_weather,
-    refresh_city_data,
     score_to_response,
 )
 
@@ -21,8 +20,6 @@ router = APIRouter()
 @router.get("/score/{city}")
 async def urban_score(city: str, db: Session = Depends(get_db)):
     try:
-        await refresh_city_data(db, city)
-
         weather = get_latest_weather(db, city)
         air = get_latest_air_quality(db, city)
         events = get_events_for_city(db, city)

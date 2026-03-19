@@ -6,7 +6,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
-from services.data_pipeline import refresh_city_data, get_latest_air_quality, air_to_response
+from services.data_pipeline import get_latest_air_quality, air_to_response
 
 router = APIRouter()
 
@@ -18,7 +18,6 @@ router = APIRouter()
 @router.get("/air/{city}")
 async def air_quality(city: str, db: Session = Depends(get_db)):
     try:
-        await refresh_city_data(db, city)
         row = get_latest_air_quality(db, city)
         if not row:
             raise HTTPException(status_code=404, detail="Aucune donnée qualité de l'air en base")

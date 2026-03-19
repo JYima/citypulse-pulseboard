@@ -68,28 +68,28 @@ def calculate_events_score(events_count: int) -> float:
 
 def compute_global_score(weather: dict, air: dict, events_count: int) -> dict:
     weather_score = calculate_weather_score(weather)
-    air_score = calculate_air_score(air)
-    events_score = calculate_events_score(events_count)
-    global_score = round(weather_score * 0.4 + air_score * 0.4 + events_score * 0.2, 2)
+    air_score     = calculate_air_score(air)
+    events_score  = calculate_events_score(events_count)
+    global_score  = round(weather_score * 0.4 + air_score * 0.4 + events_score * 0.2, 2)
 
     return {
-        "score": global_score,
+        "score":         global_score,
         "weather_score": round(weather_score, 2),
-        "air_score": round(air_score, 2),
-        "events_score": round(events_score, 2),
+        "air_score":     round(air_score, 2),
+        "events_score":  round(events_score, 2),
     }
 
 
 def insert_weather(db: Session, city_name: str, payload: dict) -> WeatherData:
     row = WeatherData(
-        city=city_name,
-        temperature=payload["temperature"],
-        feels_like=payload["feels_like"],
-        humidity=payload["humidity"],
-        wind_speed=payload["wind_speed"],
-        description=payload["description"],
-        icon=payload["icon"],
-        measured_at=datetime.now(timezone.utc).replace(tzinfo=None),
+        city        = city_name,
+        temperature = payload["temperature"],
+        feels_like  = payload["feels_like"],
+        humidity    = payload["humidity"],
+        wind_speed  = payload["wind_speed"],
+        description = payload["description"],
+        icon        = payload["icon"],
+        measured_at = datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(row)
     return row
@@ -97,12 +97,12 @@ def insert_weather(db: Session, city_name: str, payload: dict) -> WeatherData:
 
 def insert_air(db: Session, city_name: str, payload: dict) -> AirQualityData:
     row = AirQualityData(
-        city=city_name,
-        aqi=payload["aqi"],
-        pm25=payload["pm25"],
-        no2=payload["no2"],
-        o3=payload["o3"],
-        measured_at=datetime.now(timezone.utc).replace(tzinfo=None),
+        city        = city_name,
+        aqi         = payload["aqi"],
+        pm25        = payload["pm25"],
+        no2         = payload["no2"],
+        o3          = payload["o3"],
+        measured_at = datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(row)
     return row
@@ -119,17 +119,21 @@ def upsert_events(db: Session, city_name: str, events: list[dict]) -> int:
         if ext:
             exists = db.query(Event).filter(Event.external_id == ext).first()
             if exists:
+                # Met à jour l'URL si elle était manquante sur un event déjà en BDD
+                if not exists.url and payload.get("url"):
+                    exists.url = payload.get("url")
                 continue
 
         row = Event(
-            city=city_name,
-            external_id=payload["external_id"],
-            title=payload["title"],
-            description=payload["description"],
-            event_date=payload["event_date"],
-            start_time=payload["start_time"],
-            location=payload["location"],
-            category=payload["category"],
+            city        = city_name,
+            external_id = payload["external_id"],
+            title       = payload["title"],
+            description = payload["description"],
+            event_date  = payload["event_date"],
+            start_time  = payload["start_time"],
+            location    = payload["location"],
+            category    = payload["category"],
+            url         = payload.get("url"),
         )
         db.add(row)
         inserted += 1
@@ -145,20 +149,28 @@ async def collect_for_city(db: Session, city_name: str) -> dict:
         get_events(normalized_city),
     )
 
-    weather = normalize_weather_payload(normalized_city, weather_raw)
-    air = normalize_air_payload(normalized_city, air_raw)
     events = events_raw.get("events", []) if isinstance(events_raw, dict) else []
-    score = compute_global_score(weather, air, len(events))
+
+    # DEBUG — affiche le premier event brut retourné par OpenAgenda
+    # Permet de vérifier si le champ "url" est bien présent
+    if events:
+        print("=== DEBUG EVENT BRUT ===")
+        print(events[0])
+        print("========================")
+
+    weather = normalize_weather_payload(normalized_city, weather_raw)
+    air     = normalize_air_payload(normalized_city, air_raw)
+    score   = compute_global_score(weather, air, len(events))
 
     insert_weather(db, normalized_city, weather)
     insert_air(db, normalized_city, air)
     inserted_events = upsert_events(db, normalized_city, events)
 
     return {
-        "city": normalized_city,
+        "city":            normalized_city,
         "events_inserted": inserted_events,
-        "events_seen": len(events),
-        "score": score,
+        "events_seen":     len(events),
+        "score":           score,
     }
 
 

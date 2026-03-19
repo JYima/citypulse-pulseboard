@@ -1,8 +1,5 @@
-const API_BASE = "http://127.0.0.1:8000";  // ← local pour tester
-
- //const API_BASE = "https://citypulse-pulseboard.onrender.com";
-
- const ML_API_BASE = "https://citypulse-pulseboard-bqkl.onrender.com";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+const ML_API_BASE = import.meta.env.VITE_ML_API_BASE;
 
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url);

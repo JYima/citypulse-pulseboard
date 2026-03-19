@@ -8,7 +8,7 @@ SCHEMA_PATH = Path(__file__).resolve().parent / "schema.sql"
 
 # Charge les variables du fichier .env (clés API, DATABASE_URL)
 LOCAL_ENV_PATH = Path(__file__).resolve().parent / ".env"
-ROOT_ENV_PATH = ROOT_DIR / ".env"
+ROOT_ENV_PATH = ROOT_DIR / "back" / ".env"
 load_dotenv(ROOT_ENV_PATH)
 load_dotenv(LOCAL_ENV_PATH)
 

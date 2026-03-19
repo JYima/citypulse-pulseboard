@@ -11,10 +11,10 @@ from pipelines.normalization import normalize_city
 
 
 AQI_STATUS = {
-    1: {"status": "Bon", "color_code": "#00E400"},
-    2: {"status": "Correct", "color_code": "#FFFF00"},
-    3: {"status": "Modere", "color_code": "#FF7E00"},
-    4: {"status": "Mauvais", "color_code": "#FF0000"},
+    1: {"status": "Bon",          "color_code": "#00E400"},
+    2: {"status": "Correct",      "color_code": "#FFFF00"},
+    3: {"status": "Modere",       "color_code": "#FF7E00"},
+    4: {"status": "Mauvais",      "color_code": "#FF0000"},
     5: {"status": "Tres mauvais", "color_code": "#8F3F97"},
 }
 
@@ -49,9 +49,12 @@ def get_latest_air_quality(db: Session, city: str) -> AirQualityData | None:
     )
 
 
-def get_events_for_city(db: Session, city: str, limit: int = 5) -> list[Event]:
+def get_events_for_city(db: Session, city: str, limit: int = 20) -> list[Event]:
     city_name = normalize_city(city)
     today = date.today()
+
+    # Récupère les événements à venir triés par date puis heure
+    # Limite à 20 pour avoir assez d'events après dédoublonnage
     rows = (
         db.query(Event)
         .filter(func.lower(Event.city) == city_name.lower(), Event.event_date >= today)
@@ -61,8 +64,20 @@ def get_events_for_city(db: Session, city: str, limit: int = 5) -> list[Event]:
     )
 
     if rows:
-        return rows
+        # Dédoublonnage par titre uniquement — évite qu'un même événement
+        # apparaisse deux fois s'il a été collecté depuis deux agendas différents
+        # On garde le premier trouvé (celui avec l'URL si disponible)
+        seen = set()
+        unique_rows = []
+        for row in rows:
+            key = row.title.lower().strip()
+            if key not in seen:
+                seen.add(key)
+                unique_rows.append(row)
+        return unique_rows
 
+    # Fallback — retourne les derniers events connus si aucun à venir
+    # Utile en fin de journée quand tous les events du jour sont passés
     return (
         db.query(Event)
         .filter(func.lower(Event.city) == city_name.lower())
@@ -74,51 +89,50 @@ def get_events_for_city(db: Session, city: str, limit: int = 5) -> list[Event]:
 
 def weather_to_response(row: WeatherData) -> dict:
     return {
-        "city": row.city,
+        "city":        row.city,
         "temperature": row.temperature,
-        "feels_like": row.feels_like,
-        "unit": "Celsius",
-        "humidity": row.humidity,
-        "wind_speed": row.wind_speed,
+        "feels_like":  row.feels_like,
+        "unit":        "Celsius",
+        "humidity":    row.humidity,
+        "wind_speed":  row.wind_speed,
         "description": row.description,
-        "icon": row.icon,
+        "icon":        row.icon,
         "measured_at": row.measured_at.isoformat() if row.measured_at else None,
-        "source": "database",
+        "source":      "database",
     }
 
 
 def air_to_response(row: AirQualityData) -> dict:
     status = AQI_STATUS.get(row.aqi, AQI_STATUS[3])
     return {
-        "city": row.city,
-        "aqi": row.aqi,
-        "status": status["status"],
-        "color_code": status["color_code"],
+        "city":        row.city,
+        "aqi":         row.aqi,
+        "status":      status["status"],
+        "color_code":  status["color_code"],
         "pollutants": {
             "pm25": row.pm25,
-            "no2": row.no2,
-            "o3": row.o3,
+            "no2":  row.no2,
+            "o3":   row.o3,
         },
         "measured_at": row.measured_at.isoformat() if row.measured_at else None,
-        "source": "database",
+        "source":      "database",
     }
 
 
 def events_to_response(rows: list[Event]) -> list[dict]:
     payload: list[dict] = []
     for row in rows:
-        payload.append(
-            {
-                "id": row.id,
-                "title": row.title,
-                "date": row.event_date.isoformat() if row.event_date else None,
-                "time": row.start_time.isoformat() if row.start_time else None,
-                "location": row.location,
-                "category": row.category,
-                "description": row.description,
-                "source": "database",
-            }
-        )
+        payload.append({
+            "id":          row.id,
+            "title":       row.title,
+            "date":        row.event_date.isoformat() if row.event_date else None,
+            "time":        row.start_time.isoformat() if row.start_time else None,
+            "location":    row.location,
+            "category":    row.category,
+            "description": row.description,
+            "url":         row.url,    # ← URL directe vers OpenAgenda
+            "source":      "database",
+        })
     return payload
 
 
@@ -126,20 +140,20 @@ def score_to_response(city: str, weather: WeatherData, air: AirQualityData, even
     score = compute_global_score(
         {
             "temperature": weather.temperature,
-            "humidity": weather.humidity,
-            "wind_speed": weather.wind_speed,
+            "humidity":    weather.humidity,
+            "wind_speed":  weather.wind_speed,
         },
         {"aqi": air.aqi},
         len(events),
     )
 
     return {
-        "city": normalize_city(city),
-        "score": score["score"],
+        "city":    normalize_city(city),
+        "score":   score["score"],
         "details": {
             "weather_score": score["weather_score"],
-            "air_score": score["air_score"],
-            "events_score": score["events_score"],
+            "air_score":     score["air_score"],
+            "events_score":  score["events_score"],
         },
         "source": "computed_from_database",
     }

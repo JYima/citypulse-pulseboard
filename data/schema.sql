@@ -45,6 +45,7 @@ CREATE TABLE events (
     start_time TIME,
     location VARCHAR(255),
     category VARCHAR(100),
+    url VARCHAR(500),                                          -- ← URL directe OpenAgenda
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

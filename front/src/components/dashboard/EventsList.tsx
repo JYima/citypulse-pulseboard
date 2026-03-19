@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import { Calendar, MapPin, ExternalLink, Tag, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { Calendar, MapPin, ExternalLink, Tag } from "lucide-react";
 import type { EventsApiResponse } from "@/services/api";
 
 interface EventsListProps {
@@ -26,9 +25,7 @@ const formatDate = (dateStr: string, timeStr?: string) => {
     const d = new Date(dateStr);
     const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
     let result = d.toLocaleDateString("fr-FR", opts);
-    if (timeStr) {
-      result += ` ${timeStr.slice(0, 5)}`;
-    }
+    if (timeStr) result += ` ${timeStr.slice(0, 5)}`;
     return result;
   } catch {
     return dateStr;
@@ -36,9 +33,15 @@ const formatDate = (dateStr: string, timeStr?: string) => {
 };
 
 const EventsList = ({ data }: EventsListProps) => {
-  const [showAll, setShowAll] = useState(false);
-  const events = data;
-  const visibleEvents = showAll ? events : events.slice(0, 4);
+  const now = new Date();
+
+  // Filtre les événements déjà passés en combinant date + heure
+  // Double sécurité avec le filtre backend timings[gte]=now
+  const events = (Array.isArray(data) ? data : []).filter(event => {
+    if (!event.date) return true;
+    const eventDateTime = new Date(`${event.date}T${event.time || "00:00:00"}`);
+    return eventDateTime > now;
+  });
 
   return (
     <motion.div
@@ -62,24 +65,29 @@ const EventsList = ({ data }: EventsListProps) => {
           <p className="text-sm text-muted-foreground">Aucun événement à venir</p>
         </div>
       ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {visibleEvents.map((event, i) => (
-              <motion.div
+        <div className="grid gap-3 sm:grid-cols-2">
+          {events.map((event, i) => {
+            const eventUrl = event.url || event.link || null;
+            const CardWrapper = eventUrl ? motion.a : motion.div;
+            const wrapperProps = eventUrl
+              ? { href: eventUrl, target: "_blank", rel: "noopener noreferrer" }
+              : {};
+
+            return (
+              <CardWrapper
                 key={`${event.title}-${i}`}
+                {...wrapperProps}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 * i }}
-                className="group relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg"
+                className="group relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
                     {event.title}
                   </p>
-                  {(event.url || event.link) && (
-                    <a href={event.url || event.link} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                    </a>
+                  {eventUrl && (
+                    <ExternalLink className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                   )}
                 </div>
 
@@ -110,20 +118,10 @@ const EventsList = ({ data }: EventsListProps) => {
                     </span>
                   )}
                 </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {events.length > 4 && (
-            <button
-              onClick={() => setShowAll(!showAll)}
-              className="mx-auto flex items-center gap-1 rounded-lg px-4 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-            >
-              {showAll ? "Voir moins" : `Voir les ${events.length} événements`}
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAll ? "rotate-180" : ""}`} />
-            </button>
-          )}
-        </>
+              </CardWrapper>
+            );
+          })}
+        </div>
       )}
     </motion.div>
   );
